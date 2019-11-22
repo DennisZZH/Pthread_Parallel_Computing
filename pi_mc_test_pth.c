@@ -58,7 +58,7 @@ char* pi_test2() { return pi_test("Test 2", 100000000, 0.01); }
  * Run all tests.  Ignore returned messages.
  */
 void run_all_tests(void) {
-  //mu_run_test(pi_test1);
+  mu_run_test(pi_test1);
   mu_run_test(pi_test2);
 }
 
