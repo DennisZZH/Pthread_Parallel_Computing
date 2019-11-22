@@ -66,6 +66,7 @@ void* thread_work(void* rank) {
  */
 double parallel_pi(long long int no_tosses, int no_threads) {
   /*Your solution*/
+  number_in_circle = 0;
   thread_count = no_threads;
   number_of_tosses = no_tosses;
   pthread_mutex_init(&mutex,NULL);
