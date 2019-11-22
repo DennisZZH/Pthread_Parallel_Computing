@@ -84,6 +84,9 @@ double parallel_pi(long long int no_tosses, int no_threads) {
   }
 
   pthread_mutex_destroy(&mutex);
+  for(int i = 0; i < no_threads; i++){
+    free(threads[i]);
+  }
 
   double pi_estimate = 4 * number_in_circle / ((double)number_of_tosses);
 
