@@ -22,8 +22,8 @@
 
 
 pthread_barrier_t mybarrier; /*It will be initailized at itmv_mult_test_pth.c*/
-int work_block_stop = 0;
-int work_blockcyclic_stop = 0;
+int work_block_stop = 1;
+int work_blockcyclic_stop = 1;
 
 /*---------------------------------------------------------------------
  * Function:            mv_compute
@@ -81,21 +81,32 @@ void mv_compute(int i) {
  */
 void work_block(long my_rank) {
   /*Your solution*/
-  int blocksize = matrix_dim / thread_count;
-
+  int blocksize;
+  if(matrix_dim % thread_count != 0){
+    blocksize = matrix_dim / thread_count + 1;
+  }else{
+    blocksize = matrix_dim / thread_count;
+  }
+  
   for(int k = 0; k < no_iterations; k++){
-    // each thread compute row blocks, sychronize
+    
+    // printf("round %d\n", k);
+    // for(int i = 0; i < matrix_dim; i++){
+    //   printf("x = %lf \n", vector_x[i]);
+    //   printf("y = %lf \n", vector_y[i]);
+    // }
+    // pthread_barrier_wait(&mybarrier);
+
     for(int i = my_rank * blocksize; i < matrix_dim && i < my_rank * blocksize + blocksize; i++){
       mv_compute(i);
     }
     pthread_barrier_wait(&mybarrier);
 
     if(my_rank == 0){
-      work_block_stop = 0;
+      work_block_stop = 1;
       for (int i = 0; i < matrix_dim; i++){
         if (fabs(vector_y[i] - vector_x[i]) > ERROR_THRESHOLD) {
-          work_block_stop = 1;
-          break;
+          work_block_stop = 0;
         }
         vector_x[i] = vector_y[i];
       }
@@ -103,6 +114,9 @@ void work_block(long my_rank) {
     pthread_barrier_wait(&mybarrier);
 
     if(work_block_stop){
+#ifdef DEBUG1
+      printf("Reach convergence with %d iterations.\n", k);
+#endif
       break;
     }
 
@@ -138,18 +152,23 @@ void work_blockcyclic(long my_rank) {
   /*Your solution*/
   for(int k = 0; k < no_iterations; k++){
 
-    int cnt = 0;
-    for(int i = my_rank * cyclic_blocksize; i < matrix_dim; ){
-      mv_compute(i);
+    for(int i = my_rank * cyclic_blocksize, cnt = 0; i < matrix_dim; ){
+      if(cnt < cyclic_blocksize){
+        mv_compute(i);
+        i++;
+        cnt++;
+      }else{
+        i += (thread_count - 1) * cyclic_blocksize;
+        cnt = 0;
+      }
     }
     pthread_barrier_wait(&mybarrier);
 
     if(my_rank == 0){
-      work_blockcyclic_stop = 0;
+      work_blockcyclic_stop = 1;
       for (int j = 0; j < matrix_dim; j++){
         if (fabs(vector_y[j] - vector_x[j]) > ERROR_THRESHOLD) {
-          work_blockcyclic_stop = 1;
-          break;
+          work_blockcyclic_stop = 0;
         }
         vector_x[j] = vector_y[j];
       }
@@ -157,15 +176,10 @@ void work_blockcyclic(long my_rank) {
     pthread_barrier_wait(&mybarrier);
 
     if(work_blockcyclic_stop){
+#ifdef DEBUG1
+      printf("Reach convergence with %d iterations.\n", k);
+#endif
       break;
-    }
-
-    if(cnt < cyclic_blocksize){
-      i++;
-      cnt++;
-    }else{
-      i += thread_count;
-      cnt = 0;
     }
 
   }

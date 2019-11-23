@@ -153,9 +153,9 @@ double *compute_expected(char *testmsg, int n, int t, int matrix_type) {
   y = malloc(n * sizeof(double));
 
   initialize(A, x, d, y, n, matrix_type);
-#ifdef DEBUG1
-  print_itmv_sample(testmsg, A, x, d, y, matrix_type, n, t);
-#endif
+// #ifdef DEBUG1
+//   print_itmv_sample(testmsg, A, x, d, y, matrix_type, n, t);
+// #endif
   itmv_mult_seq(A, x, d, y, matrix_type, n, t);
 
   free(A);
@@ -262,6 +262,11 @@ char *itmv_test(char *testmsg, int test_correctness, int test_reach_convergence,
   endwtime = get_time();
   printf("%s: Wall clock time = %f with %d threads\n", testmsg,
          endwtime - startwtime, thread_count);
+
+#ifdef DEBUG1
+  print_itmv_sample(testmsg, matrix_A, vector_x, vector_d, vector_y,
+                    matrix_type, n, t);
+#endif
 
   msg = NULL;
   if (test_correctness == TEST_CORRECTNESS) {
